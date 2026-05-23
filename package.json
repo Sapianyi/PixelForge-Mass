@@ -1,0 +1,29 @@
+{
+  "name": "pixelforge-mass",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@jsquash/avif": "^2.1.1",
+    "fflate": "^0.8.3",
+    "idb": "^8.0.3",
+    "pica": "^10.0.1",
+    "streamsaver": "^2.0.6",
+    "vite": "^8.0.14"
+  },
+  "devDependencies": {
+    "@types/pica": "^9.0.5",
+    "@types/streamsaver": "^2.0.5",
+    "typescript": "^5.4.5",
+    "vite": "^5.4.11"
+  }
+}

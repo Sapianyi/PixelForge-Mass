@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>
+      PixelForge Mass // Privacy-First Batch Image Converter & Resizer
+    </title>
+    <meta
+      name="description"
+      content="Free, 100% client-side batch image converter and resizer. Bulk convert hundreds of images up to 20MB to WebP, AVIF, and QOI safely inside your browser without server uploads."
+    />
+    <meta
+      name="keywords"
+      content="bulk webp converter no limits, offline batch image converter, secure client-side avif encoder, convert images safely under nda, pixel-perfect image scaler, metadata cleaner online"
+    />
+    <link rel="canonical" href="https://sapianyi.github.io/PixelForge-Mass/" />
+
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="PixelForge Mass // 100% Client-Side Batch Image Pipeline"
+    />
+    <meta
+      property="og:description"
+      content="Bulk convert and resize hundreds of high-res images directly on your device. Zero server uploads, absolute privacy under NDA."
+    />
+    <meta
+      property="og:url"
+      content="https://sapianyi.github.io/PixelForge-Mass/"
+    />
+    <meta
+      property="og:image"
+      content="https://sapianyi.github.io/PixelForge-Mass/og-preview.png"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PixelForge Mass",
+        "description": "A high-performance, multithreaded batch image converter and resizer running 100% locally on the client side using Web Workers and OPFS.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All (Web Browser)",
+        "browserRequirements": "Requires FileSystem API and Web Workers.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Bulk image conversion to WebP and QOI",
+          "Offline secure batch processing",
+          "Smart image resizing with Lanczos3 and Nearest Neighbor algorithms",
+          "Automatic EXIF and layout metadata cleaning",
+          "Streaming ZIP compression directly to disk"
+        ]
+      }
+    </script>
+
+    <style>
+      /* --- CYBERPUNK MASSIVE PIPELINE DESIGN SYSTEM --- */
+      :root {
+        --bg-dark: #06090e;
+        --bg-surface: #0d1117;
+        --bg-input: #161b22;
+        --border-neon: #ff007f; /* Magenta core for Mass pipeline */
+        --text-main: #c9d1d9;
+        --text-bright: #f0f6fc;
+        --text-muted: #8b949e;
+        --neon-cyan: #58a6ff;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+        line-height: 1.6;
+      }
+
+      .app-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      /* --- APPLICATION INTERFACE (UPPER SCREEN) --- */
+      header {
+        border-bottom: 1px solid #21262d;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .brand {
+        font-family: monospace;
+        font-weight: bold;
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+        color: var(--text-bright);
+      }
+      .brand span {
+        color: var(--border-neon);
+      }
+
+      .pipeline-status {
+        font-size: 0.85rem;
+        font-family: monospace;
+        background: var(--bg-surface);
+        padding: 4px 12px;
+        border: 1px solid #30363d;
+        border-radius: 4px;
+      }
+
+      /* DROPZONE UI */
+      .dropzone-area {
+        background: var(--bg-surface);
+        border: 2px dashed #30363d;
+        border-radius: 8px;
+        padding: 60px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 30px;
+      }
+      .dropzone-area:hover,
+      .dropzone-area.drag-over {
+        border-color: var(--border-neon);
+        background: rgba(255, 0, 127, 0.02);
+      }
+      .dropzone-area h3 {
+        color: var(--text-bright);
+        margin-bottom: 10px;
+      }
+      .dropzone-area p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      /* PIPELINE CONTROLS TOOLBAR */
+      .controls-panel {
+        background: var(--bg-surface);
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 40px;
+      }
+      .controls-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .field-group label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-family: monospace;
+      }
+
+      select,
+      input[type="number"],
+      input[type="text"],
+      input[type="range"] {
+        background: var(--bg-input);
+        border: 1px solid #30363d;
+        color: var(--text-bright);
+        padding: 10px;
+        border-radius: 6px;
+        outline: none;
+        font-family: inherit;
+      }
+      select:focus,
+      input:focus {
+        border-color: var(--neon-cyan);
+      }
+      input:disabled,
+      select:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        border-color: #21262d;
+      }
+
+      /* Quality Slider Specifics */
+      .quality-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .quality-container input[type="range"] {
+        flex: 1;
+        padding: 0;
+        accent-color: var(--border-neon);
+      }
+      .quality-value-display {
+        font-family: monospace;
+        font-weight: bold;
+        color: var(--neon-cyan);
+        min-width: 25px;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin-top: auto;
+        padding-bottom: 10px;
+      }
+
+      button.process-btn {
+        flex: 1;
+        background: transparent;
+        color: var(--border-neon);
+        border: 1px solid var(--border-neon);
+        padding: 14px;
+        font-family: monospace;
+        font-size: 1rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+      button.process-btn:hover:not(:disabled) {
+        background: rgba(255, 0, 127, 0.05);
+        box-shadow: 0 0 15px rgba(255, 0, 127, 0.15);
+      }
+      button:disabled {
+        border-color: #30363d !important;
+        color: var(--text-muted) !important;
+        cursor: not-allowed;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      /* CONSOLE QUEUE TRACKER */
+      .queue-monitor {
+        background: #000;
+        border: 1px solid #21262d;
+        border-radius: 6px;
+        padding: 15px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        height: 180px;
+        overflow-y: auto;
+        color: #39ff14; /* Matrix Green for Logs */
+        margin-bottom: 40px;
+      }
+
+      /* Анімація для FAQ елементів */
+      .seo-faq-section details[open] summary span:last-child {
+        color: #ff007f !important;
+        content: "[-]";
+        transform: rotate(180deg);
+      }
+      .seo-faq-section details summary::-webkit-details-marker {
+        display: none; /* прибираємо стандартну стрілочку браузера */
+      }
+      .seo-faq-section details {
+        transition: all 0.3s ease;
+      }
+      .seo-faq-section details:hover {
+        background: rgba(0, 240, 255, 0.05) !important;
+        box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+      }
+
+      /* --- MOBILE ADAPTATION RESPONSIVE MEDIA QUERIES --- */
+      @media (max-width: 640px) {
+        .app-container {
+          padding: 20px 16px;
+        }
+        .controls-grid {
+          grid-template-columns: 1fr;
+        }
+        .dropzone-area {
+          padding: 30px 16px;
+        }
+        .action-buttons-group {
+          flex-direction: column;
+        }
+        button.process-btn {
+          padding: 12px;
+          font-size: 0.9rem;
+          width: 100%;
+        }
+        .brand {
+          font-size: 1.1rem;
+        }
+      }
+
+      /* --- HONEST SEO ACCESSIBLE CONTENT (LOWER SCREEN) --- */
+      footer {
+        border-top: 1px solid #21262d;
+        padding-top: 40px;
+        margin-top: 20px;
+      }
+      .seo-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        color: var(--text-main);
+        font-size: 0.95rem;
+      }
+      .seo-card h2,
+      .seo-card h3 {
+        color: var(--text-bright);
+        font-size: 1.15rem;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+      .seo-card p {
+        color: var(--text-muted);
+        margin-bottom: 15px;
+        text-align: justify;
+      }
+      .copyright {
+        text-align: center;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 40px;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <main>
+        <header>
+          <div class="brand">// PIXELFORGE:<span>MASS</span></div>
+          <div class="pipeline-status">
+            Engine State:
+            <span id="pipeline-state" style="color: #ffb86c"
+              >Awaiting Input</span
+            >
+          </div>
+        </header>
+
+        <div class="dropzone-area" id="dropzone">
+          <h3>Drag & Drop batch asset directory or file selection</h3>
+          <p>
+            Supports PNG, JPEG, BMP, and SVG vectors up to 20MB per item. Up to
+            500 files pool capacity.
+          </p>
+          <input
+            type="file"
+            id="file-input"
+            multiple
+            accept="image/*,image/svg+xml,.svg"
+            style="display: none"
+          />
+        </div>
+
+        <div
+          class="file-list"
+          id="file-list"
+          style="
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            background: var(--bg-surface);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #21262d;
+            display: none;
+          "
+        ></div>
+
+        <div class="controls-panel">
+          <div class="controls-grid">
+            <div class="field-group">
+              <label for="export-format">Target Format</label>
+              <select id="export-format">
+                <option value="webp" selected>
+                  WebP (Native High Compression)
+                </option>
+                <option value="qoi">QOI (Alpha-Cleansed Matrix)</option>
+                <option value="avif">AVIF (Experimental WASM Container)</option>
+              </select>
+            </div>
+
+            <div class="field-group" id="quality-field-group">
+              <label for="webp-quality">WebP Compression Quality</label>
+              <div class="quality-container">
+                <input
+                  type="range"
+                  id="webp-quality"
+                  min="0"
+                  max="100"
+                  value="85"
+                />
+                <span id="quality-value" class="quality-value-display">85</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="scale-mode">Resizing & Scaling Matrix</label>
+              <select id="scale-mode">
+                <option value="none" selected>Keep Original Dimensions</option>
+                <option value="fit">Smart Fit (Aspect Bound)</option>
+                <option value="cover">Smart Cover (Center Trimmed)</option>
+                <option value="strict">Strict Force (Stretch)</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label>Resolution Constants</label>
+              <div style="display: flex; gap: 10px">
+                <input
+                  type="number"
+                  id="target-w"
+                  placeholder="W"
+                  style="width: 50%"
+                  disabled
+                />
+                <input
+                  type="number"
+                  id="target-h"
+                  placeholder="H"
+                  style="width: 50%"
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="scale-algo">Scaling Algorithm</label>
+              <select id="scale-algo" disabled>
+                <option value="lanczos" selected>Smooth (Lanczos3)</option>
+                <option value="nearest">
+                  Pixel-Perfect (Nearest Neighbor)
+                </option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="naming-pattern">Output Mask Name</label>
+              <input
+                type="text"
+                id="naming-pattern"
+                placeholder="asset_#"
+                value="asset_#"
+              />
+            </div>
+
+            <div class="field-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="clean-meta" checked /> Strip Metadata
+                (EXIF)
+              </label>
+            </div>
+          </div>
+
+          <div class="action-buttons-group" style="display: flex; gap: 12px">
+            <button class="process-btn" id="start-btn" disabled>
+              ▶ Execute Mass Pipeline
+            </button>
+            <button
+              class="process-btn"
+              id="cancel-btn"
+              style="border-color: #8b949e; color: #8b949e"
+              disabled
+            >
+              ⏹ Cancel Process
+            </button>
+          </div>
+
+          <div
+            class="progress-bar-container"
+            id="progress-container"
+            style="margin-top: 20px; display: none"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 6px;
+                font-family: monospace;
+                font-size: 0.75rem;
+              "
+            >
+              <span style="color: var(--text-muted)">Pipeline progress:</span>
+              <span
+                id="progress-text"
+                style="color: var(--border-neon); font-weight: bold"
+                >0 / 0 files</span
+              >
+            </div>
+            <div
+              style="
+                background: var(--bg-input);
+                border: 1px solid #21262d;
+                border-radius: 4px;
+                height: 6px;
+                overflow: hidden;
+              "
+            >
+              <div
+                id="progress-bar"
+                style="
+                  height: 100%;
+                  background: var(--border-neon);
+                  width: 0%;
+                  transition: width 0.3s ease;
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+        <button
+          id="copy-log-btn"
+          style="
+            background: transparent;
+            border: 1px dashed #00f0ff;
+            color: #00f0ff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: monospace;
+            text-transform: uppercase;
+          "
+        >
+          📋 Copy System Log
+        </button>
+        <div class="queue-monitor" id="console-log">
+          [System]
+          <span id="browser-check" style="color: #ffb86c"
+            >Checking hardware environment core availability...</span
+          ><br />
+          [PixelForge Guard Engine v1.1.0 active]<br />
+          [System] Ready to allocate disk-backed private streaming buffers via
+          OPFS...
+        </div>
+      </main>
+
+      <footer>
+        <section class="seo-section">
+          <article class="seo-card">
+            <h2>100% Private Offline Image Converter Under NDA</h2>
+            <p>
+              Unlike server-side image processing platforms that harvest user
+              assets, PixelForge Mass features a zero-server streaming core.
+              Every single operation runs locally inside the sandboxed context
+              of your browser's virtual machine.
+            </p>
+            <p>
+              This secure client-side approach ensures strict data protection
+              compliance, making it an ideal internal tool for enterprise
+              operations, engineering teams working under strict corporate NDA,
+              and privacy-focused developers who deal with highly confidential
+              intellectual property.
+            </p>
+          </article>
+
+          <article class="seo-card">
+            <h2>Bulk Image Processing with Unlimited Batch Capacities</h2>
+            <p>
+              Eliminate restrictive paywalls and artificial upload limits. By
+              utilizing a high-efficiency Worker Pool system coupled with a
+              local hardware thread controller, the app processes hundreds of
+              images seamlessly by allocating streaming buffers directly on your
+              local device.
+            </p>
+            <p>
+              Professional batch image processing with advanced scaling
+              algorithms (Lanczos3 for photos, Nearest Neighbor for pixel art).
+              All metadata like GPS coordinates and camera settings can be
+              automatically removed before export.
+            </p>
+          </article>
+
+          <article class="seo-card">
+            <h2>High Performance Streaming Compression Core</h2>
+            <p>
+              By shifting the mathematical workload directly to the user's
+              processor cores via concurrent background processing threads, we
+              avoid server resource bottlenecks, enabling free batch conversion
+              of massive photo catalogs to next-gen formats without limits.
+            </p>
+            <p>
+              The application natively interfaces with cutting-edge browser
+              streaming components to dynamically construct outputs on the fly,
+              feeding the compressed archives directly to your operating
+              system's local download manager.
+            </p>
+          </article>
+        </section>
+
+        <section
+          class="seo-faq-section"
+          style="
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px dashed #00f0ff;
+          "
+        >
+          <h2
+            style="
+              color: #00f0ff;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+              margin-bottom: 20px;
+              font-size: 1.5rem;
+            "
+          >
+            📡 PixelForge Mass // FAQ & Documentation
+          </h2>
+
+          <div
+            class="faq-container"
+            style="display: flex; flex-direction: column; gap: 15px"
+          >
+            <details
+              style="
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid #ff007f;
+                padding: 15px;
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            >
+              <summary
+                style="
+                  color: #ff007f;
+                  font-weight: bold;
+                  font-size: 1.1rem;
+                  list-style: none;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  >1. Is it safe to process confidential or sensitive images
+                  here?</span
+                >
+                <span style="color: #00f0ff">[+]</span>
+              </summary>
+              <p
+                style="
+                  color: #e0e0e0;
+                  margin-top: 10px;
+                  line-height: 1.6;
+                  font-size: 0.95rem;
+                "
+              >
+                <strong>Absolutely safe.</strong> PixelForge Mass is a
+                completely autonomous, serverless, <em>Client-Side</em> web
+                application. All your files are processed exclusively within
+                your browser's local memory footprint. We do not operate backend
+                servers, meaning your images are never uploaded to the cloud.
+                Not a single byte of your graphics ever touches the network,
+                ensuring 100% data privacy and security for commercial,
+                proprietary, or sensitive tactical assets.
+              </p>
+            </details>
+
+            <details
+              style="
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid #00f0ff;
+                padding: 15px;
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            >
+              <summary
+                style="
+                  color: #00f0ff;
+                  font-weight: bold;
+                  font-size: 1.1rem;
+                  list-style: none;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  >2. How does the batch pipeline process hundreds of files
+                  without freezing my browser tab?</span
+                >
+                <span style="color: #ff007f">[+]</span>
+              </summary>
+              <p
+                style="
+                  color: #e0e0e0;
+                  margin-top: 10px;
+                  line-height: 1.6;
+                  font-size: 0.95rem;
+                "
+              >
+                The system is built on a high-performance web architecture
+                featuring a strict
+                <strong>Backpressure flow-control mechanism</strong> and
+                <strong>OPFS (Origin Private File System)</strong> sandboxing.
+                When you drop a massive directory, the original files are
+                directly streamed into a secure, virtual disk space allocated by
+                your browser. A multithreaded background worker pool
+                (<em>WorkerPool</em>) then parallelizes the image scaling,
+                quantization, and conversion tasks across all available CPU
+                hardware cores, keeping the main UI completely fluid and
+                responsive.
+              </p>
+            </details>
+
+            <details
+              style="
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid #ff007f;
+                padding: 15px;
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            >
+              <summary
+                style="
+                  color: #ff007f;
+                  font-weight: bold;
+                  font-size: 1.1rem;
+                  list-style: none;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  >3. Why do developers prefer WebP and specialized QOI formats
+                  for production?</span
+                >
+                <span style="color: #00f0ff">[+]</span>
+              </summary>
+              <p
+                style="
+                  color: #e0e0e0;
+                  margin-top: 10px;
+                  line-height: 1.6;
+                  font-size: 0.95rem;
+                "
+              >
+                The <strong>WebP</strong> format delivers cutting-edge lossy and
+                lossless compression ratios for modern web environments and
+                standalone runtime ecosystems, heavily decreasing asset sizes,
+                loading times, and hardware battery drain. On the other hand,
+                the <strong>QOI (Quite OK Image Format)</strong> is a massive
+                favorite among game developers and embedded systems engineers.
+                It encodes and decodes pixels near instantly with virtually zero
+                CPU overhead, making it ideal for resource-constrained hardware
+                bounds where every millisecond counts.
+              </p>
+            </details>
+
+            <details
+              style="
+                background: rgba(0, 0, 0, 0.6);
+                border: 1px solid #00f0ff;
+                padding: 15px;
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            >
+              <summary
+                style="
+                  color: #00f0ff;
+                  font-weight: bold;
+                  font-size: 1.1rem;
+                  list-style: none;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <span
+                  >4. What happens if a third-party codec pipeline drops an
+                  asset during heavy workloads?</span
+                >
+                <span style="color: #ff007f">[+]</span>
+              </summary>
+              <p
+                style="
+                  color: #e0e0e0;
+                  margin-top: 10px;
+                  line-height: 1.6;
+                  font-size: 0.95rem;
+                "
+              >
+                To guarantee uncompromised performance under high data
+                concurrency, the engine runs a bulletproof
+                <strong>WebP-secure hardware fallback</strong>. If unindexed
+                assets, corrupt structures, or local dev-server routing
+                constraints disrupt an asynchronous codec initialization, the
+                worker immediately isolates the error and seamlessly swaps the
+                conversion algorithm to native WebP rendering. This defensive
+                architecture guarantees that your batch queue completes smoothly
+                and your final compressed ZIP package is generated under any
+                runtime condition.
+              </p>
+            </details>
+          </div>
+        </section>
+        <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is it safe to process confidential images?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Absolutely safe. PixelForge Mass is 100% client-side..."
+                }
+              }
+            ]
+          }
+        </script>
+
+        <div class="copyright">
+          // CLIENT BUFFER STORAGE STATUS: SECURE LOCAL SANDBOX (OPFS
+          ACCESSIBLE)
+        </div>
+      </footer>
+    </div>
+    <script type="module">
+      console.log("🔵 DIRECT SCRIPT TEST");
+      import("/src/main.ts")
+        .then(() => {
+          console.log("✅ main.ts loaded!");
+        })
+        .catch((err) => {
+          console.error("❌ Failed:", err);
+        });
+    </script>
+  </body>
+</html>
